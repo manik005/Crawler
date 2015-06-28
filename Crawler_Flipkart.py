@@ -2,17 +2,17 @@ __author__ = 'shruti'
 
 # Crawler to crawl flipkart site to retrieve laptops data
 
-
 from scrapy.spider import BaseSpider
 from scrapy.selector import HtmlXPathSelector
-from tutorial.items import CrawlingItem
+from scrapy.http import Request
+from tutorial.items import TutorialItem
 import json
 import string
+
 
 class FlipkartSpider(BaseSpider):
     name = "flipkart_spider"
     allow_domains = ["flipkart.com"]
-
 
     def start_requests(self):
         x = 1
@@ -41,38 +41,34 @@ class FlipkartSpider(BaseSpider):
 
     def parse(self, response):
         hxs = HtmlXPathSelector(response)
-        titles = hxs.select("//div[contains(@class,'product-unit unit-4 browse-product new-design')]")
+        titles = hxs.select(
+            "//div[contains(@class,'product-unit unit-4 browse-product new-design')]")
         items = []
         count1 = 0
         for title in titles:
             count1 = count1 + 1
-            item = CrawlingItem()
-            item['model'] = title.select(".//div[contains(@class,'pu-title')]/a/text()").extract()
-            item['offer'] = title.select(".//div[contains(@class,'pu-final')]/span/text()").extract()
-            item['image'] = title.select(".//div[contains(@class,'pu-visual-section')]/a/img/@src").extract()
-            item['standard_url'] = "http://www.flipkart.in" + \title.select(".//div[contains(@class,'pu-title')]/a/@href").extract()
+            item = TutorialItem()
+            item['model'] = title.select(
+                ".//div[contains(@class,'pu-title')]/a/text()").extract()
+            item['offer'] = title.select(
+                ".//div[contains(@class,'pu-final')]/span/text()").extract()
+            item['image'] = title.select(
+                ".//div[contains(@class,'pu-visual-section')]/a/img/@src").extract()
+            item['standard_url'] = "http://www.flipkart.com" + \
+                title.select(
+                    ".//div[contains(@class,'pu-title')]/a/@href")[0].extract()
             items.append(item)
+            # return items
+            request = Request(
+                item['standard_url'], callback=self.new_features)
+            request.meta['item'] = item
+        yield request
 
-        #return items
-			request = scrapy.Request(items[1]['standard_url'],callback=self.new_features)
-			request.meta['item'] = item
-			yield request
-
-	def new_features(self,response)
-		item = response.meta["item"]
-		hxs = HtmlXPathSelector(response)
-		blocks = hxs.select(.//div[contains(@class,'productSpecs specSection')])
-		for block in blocks :
-			item = CrawlingItem()
-			item['included_software'] = block.select(".//tbody/tr/td[contains(@class,'specValue')]/text()").extract()
+    def new_features(self,response):
+        item = response.meta["item"]
+        hxs = HtmlXPathSelector(response)
+        blocks = hxs.select(".//div[contains(@class,'productSpecs specSection')]")
+        for block in blocks:
+            item = TutorialItem()
+            item['included_software'] = block.select(".//tbody/tr/td[contains(@class,'specValue')]/text()").extract()
         yield item
-
-
-
-
-
-
-
-
-
-
