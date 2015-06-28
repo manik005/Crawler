@@ -57,11 +57,11 @@ class FlipkartSpider(BaseSpider):
             item['standard_url'] = "http://www.flipkart.com" + \
                 title.select(
                     ".//div[contains(@class,'pu-title')]/a/@href")[0].extract()
-            items.append(item)
             # return items
             request = Request(
                 item['standard_url'], callback=self.new_features)
             request.meta['item'] = item
+            items.append(item)            
         yield request
 
     def new_features(self,response):
@@ -69,6 +69,6 @@ class FlipkartSpider(BaseSpider):
         hxs = HtmlXPathSelector(response)
         blocks = hxs.select(".//div[contains(@class,'productSpecs specSection')]")
         for block in blocks:
-            item = TutorialItem()
+            #item = TutorialItem()
             item['included_software'] = block.select(".//tbody/tr/td[contains(@class,'specValue')]/text()").extract()
         yield item
