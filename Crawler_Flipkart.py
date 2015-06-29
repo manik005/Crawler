@@ -62,7 +62,7 @@ class FlipkartSpider(BaseSpider):
                 item['standard_url'], callback=self.new_features)
             request.meta['item'] = item
             items.append(item)            
-        yield request
+        return items
 
     def new_features(self,response):
         item = response.meta["item"]
