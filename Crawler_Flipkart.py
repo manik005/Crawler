@@ -62,7 +62,7 @@ class FlipkartSpider(BaseSpider):
                 item['standard_url'], callback=self.new_features)
             request.meta['item'] = item
             items.append(item)            
-        return items
+            yield item
 
     def new_features(self,response):
         item = response.meta["item"]
@@ -71,4 +71,4 @@ class FlipkartSpider(BaseSpider):
         for block in blocks:
             #item = TutorialItem()
             item['included_software'] = block.select(".//tbody/tr/td[contains(@class,'specValue')]/text()").extract()
-        yield item
+            yield item
