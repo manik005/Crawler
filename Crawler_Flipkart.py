@@ -71,4 +71,4 @@ class FlipkartSpider(BaseSpider):
         for block in blocks:
             #item = TutorialItem()
             item['included_software'] = block.select(".//tbody/tr/td[contains(@class,'specValue')]/text()").extract()
-            yield item
+        yield item
