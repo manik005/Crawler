@@ -3,7 +3,7 @@ __author__ = 'shruti'
 # Crawler to crawl flipkart site to retrieve laptops data
 
 from scrapy.spider import BaseSpider
-from scrapy.selector import HtmlXPathSelector
+from scrapy.selector import Selector
 from scrapy.http import Request
 from tutorial.items import TutorialItem
 import json
@@ -40,7 +40,7 @@ class FlipkartSpider(BaseSpider):
                     x = 1
 
     def parse(self, response):
-        hxs = HtmlXPathSelector(response)
+        hxs = Selector(response)
         titles = hxs.select(
             "//div[contains(@class,'product-unit unit-4 browse-product new-design')]")
         items = []
@@ -61,14 +61,13 @@ class FlipkartSpider(BaseSpider):
             request = Request(
                 item['standard_url'], callback=self.new_features)
             request.meta['item'] = item
-            items.append(item)            
+            items.append(item)
             yield request
 
     def new_features(self,response):
         item = response.meta["item"]
-        hxs = HtmlXPathSelector(response)
-        blocks = hxs.select(".//div[contains(@class,'productSpecs specSection')]")
-        for block in blocks:
-            #item = TutorialItem()
-            item['included_software'] = block.select(".//tbody/tr/td[contains(@class,'specValue')]/text()").extract()
+        hxs = Selector(response)
+        rows = hxs.xpath("//div[contains(@class,'productSpecs')]/table/tr")
+        item['included_software']=str(rows.xpath("td[.='Included Software']/following-sibling::td[1]/text()").extract())
+        item['ram']=str(rows.xpath("td[.='System Memory']/following-sibling::td[1]/text()").extract())
         yield item
