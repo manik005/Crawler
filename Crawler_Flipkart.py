@@ -6,6 +6,7 @@ from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request
 from tutorial.items import TutorialItem
+
 import json
 import string
 
@@ -53,7 +54,7 @@ class FlipkartSpider(BaseSpider):
             item['offer'] = title.select(
                 ".//div[contains(@class,'pu-final')]/span/text()").extract()
             item['image'] = title.select(
-                ".//div[contains(@class,'pu-visual-section')]/a/img/@src").extract()
+                ".//div[contains(@class,'pu-visual-section')]/a/img/@data-src").extract()
             item['standard_url'] = "http://www.flipkart.com" + \
                 title.select(
                     ".//div[contains(@class,'pu-title')]/a/@href")[0].extract()
@@ -67,7 +68,11 @@ class FlipkartSpider(BaseSpider):
     def new_features(self,response):
         item = response.meta["item"]
         hxs = Selector(response)
+        
+        
         rows = hxs.xpath("//div[contains(@class,'productSpecs')]/table/tr")
         item['included_software']=str(rows.xpath("td[.='Included Software']/following-sibling::td[1]/text()").extract())
         item['ram']=str(rows.xpath("td[.='System Memory']/following-sibling::td[1]/text()").extract())
-        yield item
+        #item['ram']=rows.xpath("/td[text()='Included Software']").extract()
+        return item
+  
