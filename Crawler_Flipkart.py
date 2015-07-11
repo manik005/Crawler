@@ -1,7 +1,9 @@
 __author__ = 'shruti'
 
 # Crawler to crawl flipkart site to retrieve laptops data
-
+import scrapy
+from scrapy.contrib.linkextractors import LinkExtractor
+from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.spider import BaseSpider
 from scrapy.selector import Selector
 from scrapy.http import Request
@@ -11,36 +13,18 @@ import json
 import string
 
 
-class FlipkartSpider(BaseSpider):
+class FlipkartSpider(CrawlSpider):
     name = "flipkart_spider"
     allow_domains = ["flipkart.com"]
 
-    def start_requests(self):
-        x = 1
-        lines = [{
-            "url": "http://www.flipkart.com/laptops/pr?sid=6bo,b5g&otracker=ch_vn_laptop_filter_Laptop%20Brands_All%20Brands",
-            "count": "65"}]
-        url = lines[0]['url']
-        count = str(lines[0]['count'])
-        count = int(count) + 1
-        y = 1
-        p = str(x)
-        while x < count:
-            # p=str(x)
-            yield self.make_requests_from_url((url).format(p))
-            x = x + 1
-            p = int(x)
-            p = x
-            p = str(p)
-            if x >= count:
-                if y < 3:
-                    url = lines[y]['url']
-                    count = lines[y]['count']
-                    count = int(count) + 1
-                    y = y + 1
-                    x = 1
+    start_urls = ['http://www.flipkart.com/laptops/pr?sid=6bo,b5g']
 
-    def parse(self, response):
+    rules = [
+    Rule(LinkExtractor(allow=r'laptops\/pr\?sid=6bo,b5g&start=[0-9]'),
+         callback='parse_list', follow=True)
+    ]
+
+    def parse_list(self, response):
         hxs = Selector(response)
         titles = hxs.select(
             "//div[contains(@class,'product-unit unit-4 browse-product new-design')]")
@@ -49,12 +33,12 @@ class FlipkartSpider(BaseSpider):
         for title in titles:
             count1 = count1 + 1
             item = TutorialItem()
-            item['model'] = title.select(
-                ".//div[contains(@class,'pu-title')]/a/text()").extract()
+            item['model'] = str(title.select(
+                ".//div[contains(@class,'pu-title')]/a/text()").extract()).encode('utf-8').strip()
             item['offer'] = title.select(
                 ".//div[contains(@class,'pu-final')]/span/text()").extract()
             item['image'] = title.select(
-                ".//div[contains(@class,'pu-visual-section')]/a/img/@data-src").extract()
+                ".//div[contains(@class,'pu-visual-section')]/a/img/@data-src")
             item['standard_url'] = "http://www.flipkart.com" + \
                 title.select(
                     ".//div[contains(@class,'pu-title')]/a/@href")[0].extract()
@@ -68,11 +52,8 @@ class FlipkartSpider(BaseSpider):
     def new_features(self,response):
         item = response.meta["item"]
         hxs = Selector(response)
-        
-        
         rows = hxs.xpath("//div[contains(@class,'productSpecs')]/table/tr")
-        item['included_software']=str(rows.xpath("td[.='Included Software']/following-sibling::td[1]/text()").extract())
-        item['ram']=str(rows.xpath("td[.='System Memory']/following-sibling::td[1]/text()").extract())
-        #item['ram']=rows.xpath("/td[text()='Included Software']").extract()
+        item['included_software']=str(rows.xpath("td[.='Included Software']/following-sibling::td[1]/text()").extract()).encode('utf-8').strip()
+        item['ram']=str(rows.xpath("td[.='System Memory']/following-sibling::td[1]/text()").extract()).encode('utf-8').strip()
         return item
   
